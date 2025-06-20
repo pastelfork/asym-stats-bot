@@ -2,49 +2,31 @@ import asyncio
 import os
 
 import hikari
-import httpx
 from dotenv import load_dotenv
 from rich import print
 from rich.traceback import install
-from web3 import HTTPProvider, Web3
+
+from .utils import format_large_number, fetch_token_supply
 
 install()
 load_dotenv()
 
 USDAF_PRICE_BOT_TOKEN = os.getenv("USDAF_PRICE_BOT_TOKEN")
 GUILD_ID = os.getenv("GUILD_ID")
-MAINNET_HTTP_RPC_URL = os.getenv("MAINNET_HTTP_RPC_URL")
-
-
-def fetch_usdaf_price(search_width: str = "4h"):
-    # Fetch USDaf price from Defillama API
-    res = httpx.get(
-        f"https://coins.llama.fi/prices/current/coingecko:asymmetry-usdaf?searchWidth={search_width}"
-    )
-    price = res.json()["coins"]["coingecko:asymmetry-usdaf"]["price"]
-    return f"${price:.2f}"
-
-
-def fetch_usdaf_supply():
-    w3 = Web3(HTTPProvider(MAINNET_HTTP_RPC_URL))
-    usdaf_contract = w3.eth.contract(
-        address="0x85E30b8b263bC64d94b827ed450F2EdFEE8579dA",
-        abi="""[{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]""",
-    )
-    supply = usdaf_contract.functions.totalSupply().call() / 10**18
-    return f"${supply / 1_000_000:.2f}M"
 
 
 async def send_update(bot: hikari.GatewayBot):
-    # price = fetch_usdaf_price()
-    supply = fetch_usdaf_supply()
-    await bot.rest.edit_my_member(GUILD_ID, nickname=supply)
-    # await bot.update_presence(
-    #     activity=hikari.Activity(
-    #         name=f"{supply} USDaf Total Supply",
-    #         type=hikari.ActivityType.WATCHING,
-    #     ),
-    # )
+    try:
+        # Fetch supply using generalized function
+        supply = fetch_token_supply("USDAF")
+        supply_formatted = format_large_number(supply)
+        
+        # Update nickname to show supply
+        await bot.rest.edit_my_member(GUILD_ID, nickname=supply_formatted)
+        
+    except Exception as e:
+        print(f"Error fetching data: {e}")
+    
     await asyncio.sleep(60)
 
 

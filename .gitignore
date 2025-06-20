@@ -9,4 +9,11 @@ wheels/
 # Virtual environments
 .venv
 
+# IDE configs
+.idea
+
+# MacOS
+.DS_Store
+
+# Environment files
 .env

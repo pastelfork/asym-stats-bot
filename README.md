@@ -16,9 +16,9 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 You will also need:
 
-- 3x Discord bot token (setup 3 bots in Discord dev portal)
+- Discord bot tokens (1-3 bots depending on which you run)
 - Guild ID (aka server ID)
-- HTTP RPC URL for Ethereum Mainnet
+- HTTP RPC URL for Ethereum Mainnet (optional, uses public RPCs by default)
 
 ## Setup
 
@@ -34,7 +34,7 @@ cd asym-stats-bot
 cp .env.example .env
 ```
 
-Paste your enviroment variables in the .env file (see requirements above).
+Paste your environment variables in the .env file (see requirements above).
 
 ```bash
 uv run main.py

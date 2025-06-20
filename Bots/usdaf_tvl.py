@@ -2,10 +2,11 @@ import asyncio
 import os
 
 import hikari
-import httpx
 from dotenv import load_dotenv
 from rich import print
 from rich.traceback import install
+
+from .utils import format_large_number, fetch_protocol_tvl
 
 install()
 load_dotenv()
@@ -14,21 +15,18 @@ USDAF_TVL_BOT_TOKEN = os.getenv("USDAF_TVL_BOT_TOKEN")
 GUILD_ID = os.getenv("GUILD_ID")
 
 
-def format_tvl(tvl: float) -> str:
-    if tvl >= 1_000_000:
-        return f"${tvl / 1_000_000:.2f}M"
-    return f"${round(tvl, 2):,}"
-
-
-def fetch_usdaf_tvl():
-    res = httpx.get("https://api.llama.fi/tvl/asymmetry-usdaf")
-    return res.json()
-
-
 async def send_update(bot: hikari.GatewayBot):
-    tvl = fetch_usdaf_tvl()
-    formatted_tvl = format_tvl(tvl)
-    await bot.rest.edit_my_member(GUILD_ID, nickname=formatted_tvl)
+    try:
+        # Fetch TVL using generalized function
+        tvl = fetch_protocol_tvl("asymmetry-usdaf")
+        formatted_tvl = format_large_number(tvl)
+        
+        # Update nickname to show TVL
+        await bot.rest.edit_my_member(GUILD_ID, nickname=formatted_tvl)
+        
+    except Exception as e:
+        print(f"Error fetching data: {e}")
+    
     await asyncio.sleep(60)
 
 
